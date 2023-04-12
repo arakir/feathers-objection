@@ -535,6 +535,15 @@ class Service extends AdapterService {
       const q = params.objection || this.createQuery(params);
       const groupByColumns = this.getGroupByColumns(q);
 
+      if (filters.$sort) {
+        Object.keys(filters.$sort).forEach(item => {
+          const matches = item.match(/^ref\((.+)\)$/);
+          const key = matches ? ref(matches[1]) : item;
+
+          q.select({ [`$${key}`]: key });
+        });
+      }
+
       // Handle $limit
       if (filters.$limit) {
         q.limit(filters.$limit);
