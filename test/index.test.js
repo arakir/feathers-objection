@@ -971,11 +971,48 @@ describe('Feathers Objection Service', () => {
         });
     });
 
+    it('allows joinRelation queries, eager with sort by relation, without selecting relation table', () => {
+      return employees
+        .find({
+          query: {
+            $eager: 'company',
+            $joinRelation: 'company',
+            $sort: {
+              'employees.name': 1,
+              'company.name': 1
+            }
+          }
+        })
+        .then(data => {
+          expect(data.length).to.equal(4);
+          expect(data[0].name).to.equal('A');
+          expect(data[0].company.name).to.equal('Apple');
+        });
+    });
+
     it('allows joinRelation queries, eager with sort and sorted relation', () => {
       return employees
         .find({
           query: {
             $select: ['employees.*', 'company.name'],
+            $eager: 'company(orderByName)',
+            $joinRelation: 'company',
+            $sort: {
+              'employees.name': 1
+            }
+          }
+        })
+        .then(data => {
+          expect(data.length).to.equal(4);
+          expect(data[0].name).to.equal('A');
+          expect(data[0].company.name).to.equal('Apple');
+        });
+    });
+
+    it('allows joinRelation queries, eager with sort and sorted relation,  without selecting relation table', () => {
+      return employees
+        .find({
+          query: {
             $eager: 'company(orderByName)',
             $joinRelation: 'company',
             $sort: {
@@ -1717,6 +1754,19 @@ describe('Feathers Objection Service', () => {
         expect(data.length).to.equal(2);
         expect(data[0].name).to.equal('Apple');
         expect(data[0]['jsonbObject:numberField']).to.equal(1);
+        expect(data[0].object).to.equal('string in jsonObject.objectField.object2');
+      });
+    });
+
+    it('select & sort with ref, without selecting sorting column', () => {
+      return companies.find({
+        query: {
+          $select: ['name', 'ref(jsonbObject:objectField.object) as object'],
+          $sort: { 'ref(jsonbObject:numberField)': 1 }
+        }
+      }).then(data => {
+        expect(data.length).to.equal(2);
+        expect(data[0].name).to.equal('Apple');
         expect(data[0].object).to.equal('string in jsonObject.objectField.object2');
       });
     });

@@ -546,6 +546,17 @@ class Service extends AdapterService {
       }
 
       let executeQuery = total => {
+        if (filters.$sort) {
+          if (!q.hasSelects()) {
+            q.select(`${this.Model.tableName}.*`);
+          }
+          Object.keys(filters.$sort).forEach(item => {
+            const matches = item.match(/^ref\((.+)\)$/);
+            const key = matches ? ref(matches[1]) : item;
+
+            q.select({ [`$${key}`]: key });
+          });
+        }
         return q.then(data => {
           return {
             total,
@@ -570,6 +581,7 @@ class Service extends AdapterService {
       if (count) {
         const countColumns = groupByColumns || (Array.isArray(this.id) ? this.id.map(idKey => `${this.Model.tableName}.${idKey}`) : [`${this.Model.tableName}.${this.id}`]);
         const countQuery = this._createQuery(params);
+        countQuery.clearOrder();
 
         if (query.$joinRelation || query.$leftJoinRelation) {
           if (query.$joinRelation) {
@@ -602,15 +614,6 @@ class Service extends AdapterService {
           .then(count => count && count.length ? parseInt(count[0].total, 10) : 0)
           .then(executeQuery)
           .catch(errorHandler);
-      }
-
-      if (filters.$sort) {
-        Object.keys(filters.$sort).forEach(item => {
-          const matches = item.match(/^ref\((.+)\)$/);
-          const key = matches ? ref(matches[1]) : item;
-
-          q.select({ [`$${key}`]: key });
-        });
       }
 
       return executeQuery().catch(errorHandler);
