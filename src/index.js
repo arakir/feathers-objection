@@ -553,8 +553,9 @@ class Service extends AdapterService {
           Object.keys(filters.$sort).forEach(item => {
             const matches = item.match(/^ref\((.+)\)$/);
             const key = matches ? ref(matches[1]) : item;
-
-            q.select({ [`$${key}`]: key });
+            if (!q.hasSelection(key)) {
+              q.select({ [`$${key}`]: key });
+            }
           });
         }
         return q.then(data => {
