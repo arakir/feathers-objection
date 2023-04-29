@@ -601,12 +601,17 @@ class Service extends AdapterService {
             .countDistinct({ total: countColumns });
         } else if (countColumns.length > 1) {
           countQuery.countDistinct({ total: countColumns });
+        } else if (query.$modify && params.modifierFiltersResults !== false) {
+          countQuery.countDistinct({
+            total: countColumns
+          });
         } else {
           countQuery.count({ total: countColumns });
         }
 
         if (query && query.$modify && params.modifierFiltersResults !== false) {
           this.modifyQuery(countQuery, query.$modify);
+          countQuery.clearGroup();
         }
 
         this.objectify(countQuery, query, null, null, query.$allowRefs);
